@@ -13,6 +13,7 @@ import {
   type TaskService,
   type UpdateTaskInput,
 } from '../domain/task-service.js';
+import { ingestMarkdownTasks } from '../markdown/ingest.js';
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const isoTimestamp = z.string().datetime({ offset: true });
@@ -65,6 +66,13 @@ const listQuerySchema = z.object({
 const attentionQuerySchema = z.object({
   dueSoonDays: z.coerce.number().int().min(0).max(365).optional(),
   waitingDays: z.coerce.number().int().min(0).max(3650).optional(),
+});
+
+const markdownIngestSchema = z.object({
+  markdown: z.string(),
+  context: contextSchema.optional(),
+  tags: z.array(z.string()).optional(),
+  actor: z.string().min(1).optional(),
 });
 
 export function registerTaskRoutes(app: FastifyInstance, service: TaskService): void {
@@ -129,6 +137,12 @@ export function registerTaskRoutes(app: FastifyInstance, service: TaskService): 
     const parsed = attentionQuerySchema.safeParse(request.query);
     if (!parsed.success) return validationError(reply, parsed.error);
     return reply.send(service.attention(parsed.data));
+  });
+
+  app.post('/markdown/ingest', async (request, reply) => {
+    const parsed = markdownIngestSchema.safeParse(request.body);
+    if (!parsed.success) return validationError(reply, parsed.error);
+    return reply.send(ingestMarkdownTasks(service, parsed.data));
   });
 }
 
