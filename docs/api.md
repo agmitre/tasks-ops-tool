@@ -162,6 +162,84 @@ Returns:
 
 Attention is not task state. It is a projection over existing task truth so agents can cheaply answer what currently needs attention.
 
+## Agent operations
+
+The `/ops` endpoints are convenience operations for agents and automation clients. They express common intent without forcing the caller to manually read and resubmit task revisions. Internally, the service still performs revision-safe mutations against the canonical task API.
+
+### `POST /ops/tasks/:id/wait`
+
+Mark an existing task as waiting.
+
+```json
+{
+  "waitingOn": "Phoebe",
+  "dueDate": "2026-08-20",
+  "actor": "bryan"
+}
+```
+
+The service reads the latest revision, changes the task to `waiting`, records `waitingSince` when needed, and returns the updated task.
+
+### `POST /ops/tasks/:id/complete`
+
+Complete an existing task.
+
+```json
+{
+  "actor": "bryan"
+}
+```
+
+The service reads the latest revision and safely transitions the task to `done`.
+
+### `POST /ops/tasks/:id/follow-up`
+
+Create a follow-up as a normal child task.
+
+```json
+{
+  "title": "Follow up with Phoebe again",
+  "dueDate": "2026-08-21",
+  "assignedTo": "bryan",
+  "actor": "bryan"
+}
+```
+
+If `title` is omitted, the service generates `Follow up: <parent title>`. Tags and recovery context are inherited from the parent unless explicit tags are supplied.
+
+### `GET /ops/attention`
+
+Compact heartbeat-oriented attention view. It returns counts plus task IDs rather than full task bodies so an agent can cheaply decide whether deeper reads are needed.
+
+Optional parameters:
+
+- `dueSoonDays`, default `3`
+- `waitingDays`, default `5`
+
+Example shape:
+
+```json
+{
+  "generatedAt": "2026-08-17T12:00:00.000Z",
+  "counts": {
+    "overdue": 1,
+    "dueSoon": 2,
+    "waitingTooLong": 1,
+    "blocked": 0,
+    "urgent": 1
+  },
+  "taskIds": {
+    "overdue": ["tsk_1"],
+    "dueSoon": ["tsk_2", "tsk_3"],
+    "waitingTooLong": ["tsk_4"],
+    "blocked": [],
+    "urgent": ["tsk_1"]
+  }
+}
+```
+
+A typical agent heartbeat should call `/ops/attention` first, then fetch only the task records that need interpretation or action.
+
 ## Markdown ingest and recovery
 
 ### `POST /markdown/ingest`
