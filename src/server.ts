@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import { AgentOpsService } from './agent/agent-ops.js';
 import { registerAgentRoutes } from './api/agent-routes.js';
+import { registerAuth } from './api/auth.js';
 import { registerTaskRoutes } from './api/routes.js';
 import { TaskService } from './domain/task-service.js';
 import { openDatabase } from './storage/database.js';
@@ -16,6 +17,8 @@ app.addHook('onClose', async () => {
   db.close();
 });
 
+registerAuth(app);
+
 app.get('/health', async () => ({
   ok: true,
   service: 'tasks-ops-tool',
@@ -24,6 +27,7 @@ app.get('/health', async () => ({
 app.get('/status', async () => ({
   name: 'tasks-ops-tool',
   version: '0.1.0-alpha.0',
+  auth: process.env.TASKS_OPS_AUTH_DISABLED === 'true' ? 'disabled' : 'bearer',
   capabilities: [
     'task_crud',
     'revision_safe_mutation',
@@ -37,6 +41,7 @@ app.get('/status', async () => ({
     'markdown_recovery',
     'agent_task_intents',
     'agent_attention_summary',
+    'bearer_token_auth',
   ],
 }));
 
