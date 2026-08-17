@@ -198,7 +198,7 @@ export class TaskRepository {
     const rows = this.db.prepare(`
       SELECT * FROM task_activity
       WHERE task_id = ?
-      ORDER BY timestamp ASC
+      ORDER BY timestamp ASC, rowid ASC
     `).all(taskId) as ActivityRow[];
 
     return rows.map((row) => ({
