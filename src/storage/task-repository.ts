@@ -105,7 +105,7 @@ export class TaskRepository {
         SELECT 1 FROM json_each(tasks.tags_json)
         WHERE json_each.value = @tag
       )`);
-      params.tag = filters.tag;
+      params.tag = filters.tag.replace(/^#/, '').toLowerCase();
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
@@ -113,7 +113,13 @@ export class TaskRepository {
       SELECT * FROM tasks
       ${where}
       ORDER BY
-        CASE status WHEN 'urgent' THEN 0 ELSE 1 END,
+        CASE priority
+          WHEN 'urgent' THEN 0
+          WHEN 'high' THEN 1
+          WHEN 'medium' THEN 2
+          WHEN 'low' THEN 3
+          ELSE 4
+        END,
         due_date IS NULL,
         due_date ASC,
         updated_at DESC
