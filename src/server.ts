@@ -1,6 +1,17 @@
 import Fastify from 'fastify';
+import { registerTaskRoutes } from './api/routes.js';
+import { TaskService } from './domain/task-service.js';
+import { openDatabase } from './storage/database.js';
+import { TaskRepository } from './storage/task-repository.js';
 
 const app = Fastify({ logger: true });
+const db = openDatabase();
+const repository = new TaskRepository(db);
+const taskService = new TaskService(repository);
+
+app.addHook('onClose', async () => {
+  db.close();
+});
 
 app.get('/health', async () => ({
   ok: true,
@@ -11,15 +22,18 @@ app.get('/status', async () => ({
   name: 'tasks-ops-tool',
   version: '0.1.0-alpha.0',
   capabilities: [
-    'task_crud_planned',
-    'revision_safe_mutation_planned',
-    'task_relations_planned',
-    'activity_log_planned',
-    'attention_queries_planned',
+    'task_crud',
+    'revision_safe_mutation',
+    'task_relations',
+    'activity_log',
+    'attention_queries',
+    'filtered_task_queries',
     'markdown_task_markers',
     'markdown_recovery_planned',
   ],
 }));
+
+registerTaskRoutes(app, taskService);
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '0.0.0.0';
@@ -28,5 +42,6 @@ try {
   await app.listen({ port, host });
 } catch (error) {
   app.log.error(error);
+  db.close();
   process.exit(1);
 }
