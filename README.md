@@ -14,11 +14,66 @@ Tasks Ops Tool is a small, portable task engine that can run beside an AI agent 
 - **Portable**: the core service stays application-agnostic. Taskel is a future first-class consumer, not a hard dependency.
 - **Secure by default**: operational endpoints require a bearer token; health and capability discovery remain public.
 
+## Agent-owned operational workspace
+
+Tasks Ops Tool can be used independently from any notes app.
+
+An agent may use the task context fields as its own operational namespace and keep actionable state out of scattered reminder files, scratch notes, and repeated memory scans.
+
+For example:
+
+```text
+workspaceName: Agent Internal
+
+containers / logical sections:
+- Todo
+- Waiting
+- Bugs
+- Improvements
+- Follow-ups
+- Maintenance
+```
+
+A task may optionally keep a stable source reference to the agent's own knowledge system, ticket store, repository, note database, or another external system:
+
+```json
+{
+  "title": "Investigate recurring Ollama startup issue",
+  "tags": ["ollama", "bug"],
+  "context": {
+    "workspaceId": "agent_internal",
+    "workspaceName": "Agent Internal",
+    "containerId": "bugs",
+    "containerName": "Bugs",
+    "sourceNoteId": "openclaw:memory:ollama-startup",
+    "sourceNoteTitle": "Ollama startup investigation"
+  }
+}
+```
+
+The source does not need to be Taskel. It can be any stable identifier the agent understands.
+
+This makes Tasks Ops Tool useful as a structured operational memory layer:
+
+```text
+agent knowledge / memory
+        ↕ stable source IDs
+Tasks Ops Tool
+        ↕
+actionable state + history + attention
+```
+
+Use Tasks Ops Tool for things that have state or require action: work to do, waiting items, bugs, improvements, follow-ups, maintenance, and completed work history.
+
+Do **not** use it as a replacement for the agent's entire knowledge base. Facts, reference material, long-form reasoning, and durable domain knowledge should remain in the system best suited to store them.
+
+Workspace/container fields are currently task context namespaces rather than separately managed workspace/container records. Agents may use stable IDs and names consistently today; richer workspace management can evolve later without coupling the service to Taskel.
+
 ## Current alpha milestone
 
 The current goal is simple: let an agent reliably answer **“What needs attention?”** and maintain real work from structured task state.
 
-Implemented on `develop/core`:
+Implemented:
 
 - task CRUD
 - parent/child task relationships
@@ -83,7 +138,7 @@ For trusted local development only, authentication can be explicitly disabled wi
 
 ## Status
 
-Alpha implementation and dogfooding work is happening on `develop/core`.
+`main` contains the current dogfood-ready alpha. Further changes should be driven by real agent usage wherever possible.
 
 ## License
 
