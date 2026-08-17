@@ -1,0 +1,17 @@
+services:
+  tasks-ops-tool:
+    build: .
+    container_name: tasks-ops-tool
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8787
+      TASKS_OPS_DB: /data/tasks-ops.sqlite
+      TASKS_OPS_TOKEN: ${TASKS_OPS_TOKEN:?Set TASKS_OPS_TOKEN in the host environment or .env file outside Git}
+    ports:
+      - "8787:8787"
+    volumes:
+      - tasks_ops_data:/data
+
+volumes:
+  tasks_ops_data:
