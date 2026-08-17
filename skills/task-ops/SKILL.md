@@ -6,6 +6,25 @@ Use Tasks Ops Tool as the structured source of truth for actionable work.
 
 Maintain tasks deliberately and use cheap deterministic task queries before searching broader notes or memory.
 
+## Authentication
+
+Read `GET /status` and `GET /health` without authentication for discovery and liveness.
+
+All task, attention, activity, agent-op, and Markdown endpoints require:
+
+```http
+Authorization: Bearer <TASKS_OPS_TOKEN>
+```
+
+Treat `TASKS_OPS_TOKEN` as an operator-managed secret.
+
+- Read it from the runtime environment or an approved secret store.
+- Never write the token into this repository, Markdown notes, task bodies, durable agent memory, logs, examples, or generated documentation.
+- Never echo the full token back to the operator.
+- Never commit a `.env` file containing the token.
+- If the token is absent, ask the operator to configure it on the host rather than inventing a persistent secret location.
+- Token rotation should require only changing the host secret and restarting the service/client environment.
+
 ## Service discovery
 
 Read `GET /status` before assuming a capability exists.
@@ -132,3 +151,4 @@ Do not duplicate routine state transitions into separate notes just to preserve 
 - Do not overwrite a newer revision with stale state.
 - Do not create duplicate tasks when an existing task can be updated.
 - Do not create a follow-up unless it represents a concrete next action.
+- Never expose or persist the bearer token in task data, notes, logs, or source control.
