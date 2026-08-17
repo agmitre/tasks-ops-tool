@@ -43,6 +43,60 @@ Distinguish these concepts:
 
 Do not create tasks for every fact or sentence in a note.
 
+## Agent-internal operational workspace
+
+Tasks Ops Tool may be used independently from Taskel or any other notes application.
+
+If this agent currently stores actionable work across scratch files, TODO documents, bug lists, reminder notes, or repeated memory scans, prefer a stable agent-owned Task Ops namespace for that operational state.
+
+A recommended convention is:
+
+```text
+workspaceId: agent_internal
+workspaceName: Agent Internal
+```
+
+Then use stable logical container IDs/names for categories that are genuinely useful, for example:
+
+```text
+todo / Todo
+waiting / Waiting
+bugs / Bugs
+improvements / Improvements
+followups / Follow-ups
+maintenance / Maintenance
+```
+
+Do not create a new workspace/container naming scheme each session. Reuse the established namespace.
+
+Use this workspace for actionable and stateful items, not as a replacement for the agent's knowledge base.
+
+Appropriate:
+
+- operator-requested work
+- things to remember **because an action is required**
+- bugs and recurring failures to investigate
+- improvements to revisit
+- waiting items
+- follow-ups
+- maintenance
+- completed operational history
+
+Keep factual knowledge, long-form notes, procedures, domain references, and reasoning in the agent's proper knowledge/memory system.
+
+When a task originates from the agent's own knowledge, preserve a stable source reference when available. `sourceNoteId` is intentionally generic and may identify OpenClaw memory, a repository issue, a Taskel note, another database record, or another durable source.
+
+Example:
+
+```text
+sourceNoteId: openclaw:memory:ollama-startup
+sourceNoteTitle: Ollama startup investigation
+```
+
+The task should reference the knowledge source rather than duplicate its entire contents.
+
+Current workspace/container fields are context namespaces rather than separately managed entities. Do not assume workspace/container CRUD exists.
+
 ## Preferred read strategy
 
 Use the cheapest useful query first:
@@ -111,7 +165,7 @@ Preserve useful context when creating tasks:
 
 - workspace ID and name
 - container ID and name
-- source note ID and title
+- source note/source record ID and title
 - parent task ID and title
 
 Do not silently retarget a task based only on a matching name.
@@ -122,7 +176,7 @@ Use a small number of durable tags that materially improve retrieval. Avoid gene
 
 Prefer existing tags when available.
 
-Tags are normalized by the service and should represent useful semantic lookup dimensions such as a customer, project, integration, or domain.
+Tags are normalized by the service and should represent useful semantic lookup dimensions such as a customer, project, integration, domain, subsystem, or issue family.
 
 ## Attention behavior
 
@@ -152,3 +206,4 @@ Do not duplicate routine state transitions into separate notes just to preserve 
 - Do not create duplicate tasks when an existing task can be updated.
 - Do not create a follow-up unless it represents a concrete next action.
 - Never expose or persist the bearer token in task data, notes, logs, or source control.
+- Do not migrate an entire knowledge base into Task Ops just because it is available; keep Task Ops focused on operational state.
