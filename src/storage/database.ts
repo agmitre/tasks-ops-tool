@@ -1,8 +1,12 @@
 import Database from 'better-sqlite3';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 export type SqliteDatabase = Database.Database;
 
 export function openDatabase(filename = process.env.TASKS_OPS_DB ?? './data/tasks-ops.sqlite'): SqliteDatabase {
+  if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true });
+
   const db = new Database(filename);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
@@ -31,8 +35,7 @@ export function openDatabase(filename = process.env.TASKS_OPS_DB ?? './data/task
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       completed_at TEXT,
-      revision INTEGER NOT NULL DEFAULT 1,
-      FOREIGN KEY(parent_task_id) REFERENCES tasks(id) ON DELETE SET NULL
+      revision INTEGER NOT NULL DEFAULT 1
     );
 
     CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
