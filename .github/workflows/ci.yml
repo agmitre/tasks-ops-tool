@@ -31,3 +31,6 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Build container image
+        run: docker build -t tasks-ops-tool:ci .
