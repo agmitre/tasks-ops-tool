@@ -2,6 +2,20 @@
 
 Default development port: `8787`.
 
+## Authentication
+
+`GET /health` and `GET /status` are public so operators, agents, and monitoring systems can discover service health and capabilities.
+
+All other endpoints require a bearer token:
+
+```http
+Authorization: Bearer <TASKS_OPS_TOKEN>
+```
+
+The service fails closed when `TASKS_OPS_TOKEN` is missing. `TASKS_OPS_AUTH_DISABLED=true` is available only for explicit trusted local development.
+
+Tokens are operator-managed secrets and should never be stored in task data, Markdown, source control, durable agent memory, logs, or examples.
+
 ## Service
 
 ### `GET /health`
@@ -10,7 +24,7 @@ Liveness check.
 
 ### `GET /status`
 
-Returns service version and current capabilities.
+Returns service version, authentication mode, and current capabilities.
 
 ## Tasks
 
