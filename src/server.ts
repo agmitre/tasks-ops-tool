@@ -28,8 +28,10 @@ app.get('/status', async () => ({
     'activity_log',
     'attention_queries',
     'filtered_task_queries',
+    'task_text_search',
     'markdown_task_markers',
-    'markdown_recovery_planned',
+    'markdown_ingest',
+    'markdown_recovery',
   ],
 }));
 
