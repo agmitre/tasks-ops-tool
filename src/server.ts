@@ -1,4 +1,6 @@
 import Fastify from 'fastify';
+import { AgentOpsService } from './agent/agent-ops.js';
+import { registerAgentRoutes } from './api/agent-routes.js';
 import { registerTaskRoutes } from './api/routes.js';
 import { TaskService } from './domain/task-service.js';
 import { openDatabase } from './storage/database.js';
@@ -8,6 +10,7 @@ const app = Fastify({ logger: true });
 const db = openDatabase();
 const repository = new TaskRepository(db);
 const taskService = new TaskService(repository);
+const agentOps = new AgentOpsService(taskService);
 
 app.addHook('onClose', async () => {
   db.close();
@@ -32,10 +35,13 @@ app.get('/status', async () => ({
     'markdown_task_markers',
     'markdown_ingest',
     'markdown_recovery',
+    'agent_task_intents',
+    'agent_attention_summary',
   ],
 }));
 
 registerTaskRoutes(app, taskService);
+registerAgentRoutes(app, agentOps);
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? '0.0.0.0';
