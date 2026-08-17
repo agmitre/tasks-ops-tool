@@ -134,7 +134,7 @@ Returns automatic task history, currently including:
 - `updated`
 - `status_changed`
 - `follow_up_created`
-- `recovered_from_markdown` (reserved for the Markdown recovery pass)
+- `recovered_from_markdown`
 
 ## Attention
 
@@ -161,3 +161,41 @@ Returns:
 ```
 
 Attention is not task state. It is a projection over existing task truth so agents can cheaply answer what currently needs attention.
+
+## Markdown ingest and recovery
+
+### `POST /markdown/ingest`
+
+Scan Markdown for task checkboxes, hydrate naked tasks with stable IDs, recognize existing task markers, and reconstruct missing structured tasks when a surviving marker is found.
+
+Example body:
+
+```json
+{
+  "markdown": "- [ ] Send specs to Phoebe\n- [x] Review wiring <!-- task:tsk_old -->",
+  "tags": ["outdoorlink", "chainzone"],
+  "actor": "bryan",
+  "context": {
+    "containerId": "cnt_integrations",
+    "containerName": "OutdoorLink / Integrations",
+    "sourceNoteId": "note_chainzone",
+    "sourceNoteTitle": "Chainzone VCS200"
+  }
+}
+```
+
+A naked checkbox:
+
+```md
+- [ ] Send specs to Phoebe
+```
+
+is returned with a stable marker:
+
+```md
+- [ ] Send specs to Phoebe <!-- task:tsk_... -->
+```
+
+If Markdown contains a marker whose structured task is missing, the service recreates that task using the surviving task ID, checkbox text, completion state, tags, and supplied context snapshot. The recovery is recorded in activity history.
+
+Existing referenced tasks are only recognized in this first recovery pass. The ingest endpoint does **not** silently overwrite existing structured task state from Markdown. Bidirectional reconciliation policy should be explicit and revision-safe before that behavior is added.
