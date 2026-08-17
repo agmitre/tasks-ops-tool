@@ -78,4 +78,5 @@ export interface TaskListFilters {
   containerId?: string;
   waitingOn?: string;
   parentTaskId?: string;
+  q?: string;
 }
