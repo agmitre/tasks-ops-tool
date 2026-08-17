@@ -13,6 +13,53 @@ Recommended deployment for a long-running agent host:
 - local/private network exposure where practical
 - bearer authentication enabled
 
+## Optional agent-internal workspace
+
+Tasks Ops Tool does not require Taskel or any specific notes application.
+
+An agent may use task context as its own operational namespace for actionable work that would otherwise be scattered across reminder files, scratch notes, bug lists, and repeated memory scans.
+
+A recommended pattern is:
+
+```text
+workspaceId: agent_internal
+workspaceName: Agent Internal
+
+logical containers:
+- todo / Todo
+- waiting / Waiting
+- bugs / Bugs
+- improvements / Improvements
+- followups / Follow-ups
+- maintenance / Maintenance
+```
+
+These are conventions, not required fixed names. Keep IDs stable once chosen.
+
+Use this internal workspace for actionable or stateful items such as:
+
+- work the operator asked the agent to perform
+- reminders that require future action
+- bugs or recurring failures the agent is tracking
+- improvements to revisit
+- waiting items and follow-ups
+- maintenance work
+- completed operational history
+
+Do not move the agent's entire knowledge base into Tasks Ops Tool. Facts, reference material, long-form notes, and durable domain knowledge should remain in the agent's knowledge system.
+
+When useful, link a task back to the agent's own knowledge using `sourceNoteId` / `sourceNoteTitle`. The source ID is intentionally generic and may refer to OpenClaw memory, a repository issue, another task system, a note database, Taskel, or any other stable source the agent understands.
+
+Example source ID:
+
+```text
+openclaw:memory:ollama-startup
+```
+
+Treat source references as links, not copies of the entire source knowledge.
+
+Current workspace/container fields are task context namespaces. They are not yet separately managed workspace/container records, so use stable IDs and names consistently rather than assuming workspace CRUD exists.
+
 ## Secret boundary
 
 `TASKS_OPS_TOKEN` is operator-managed.
@@ -87,6 +134,8 @@ After installation, configure the agent with:
 - the operating instructions in `skills/task-ops/SKILL.md`
 
 For heartbeat behavior, call `/ops/attention` first and fetch full tasks only when the summary indicates something requires interpretation.
+
+If the agent uses an internal workspace, make that namespace part of its durable operating configuration so it does not invent a new workspace/container naming scheme each session.
 
 ## Updating
 
