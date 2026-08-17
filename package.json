@@ -12,16 +12,16 @@
     "test": "vitest run"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
-    "better-sqlite3": "^11.10.0",
+    "better-sqlite3": "^13.0.3",
     "fastify": "^5.4.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.15.0",
+    "@types/node": "^24.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
     "vitest": "^3.1.0"

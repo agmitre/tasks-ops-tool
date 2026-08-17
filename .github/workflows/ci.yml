@@ -11,8 +11,11 @@ on:
       - develop/core
 
 jobs:
-  validate:
+  validate-node:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24]
 
     steps:
       - name: Checkout
@@ -21,7 +24,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
         run: npm install
@@ -31,6 +34,13 @@ jobs:
 
       - name: Test
         run: npm test
+
+  validate-container:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Build container image
         run: docker build -t tasks-ops-tool:ci .

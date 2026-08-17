@@ -90,7 +90,7 @@ Implemented:
 - compact agent heartbeat attention summary
 - bearer-token authentication
 - Docker/Compose deployment with persistent SQLite storage
-- CI for typecheck, tests, and container build
+- CI for Node.js 22/24, tests, typecheck, and container build
 
 No UI, Gantt, complex recurrence, or webhook system is required for this alpha.
 
@@ -98,13 +98,24 @@ No UI, Gantt, complex recurrence, or webhook system is required for this alpha.
 
 If you are giving this repository to an AI agent, start with [`AGENTS.md`](AGENTS.md), then give the agent the operating contract at [`skills/task-ops/SKILL.md`](skills/task-ops/SKILL.md).
 
+### Installation path
+
+Prefer the path that changes the host the least:
+
+1. **Docker already installed:** use `docker compose`. This is the preferred long-running deployment.
+2. **Docker absent but Node.js 22/24 already installed:** use native Node.
+3. **Neither is available:** the agent should report the missing runtime before installing large dependencies.
+
+Agents should **not automatically install Python, Visual Studio Build Tools, C++ workloads, Docker Desktop, PM2, NSSM, or similar large host dependencies** merely to get through installation. See [`AGENTS.md`](AGENTS.md) for the fail-fast installation rules.
+
 The intended flow is:
 
 1. Agent installs or updates the public repository.
-2. Agent prepares the service.
+2. Agent prepares the smallest viable deployment path.
 3. The human/operator configures `TASKS_OPS_TOKEN` outside Git.
 4. Agent verifies the service without exposing the token.
-5. Agent uses the Task Ops skill for day-to-day operations.
+5. Agent verifies reboot/auto-restart behavior for long-running use.
+6. Agent uses the Task Ops skill for day-to-day operations.
 
 The token should never be committed, written into tasks/notes, or stored in durable agent memory.
 
@@ -113,6 +124,30 @@ The token should never be committed, written into tasks/notes, or stored in dura
 `compose.yml` expects `TASKS_OPS_TOKEN` from the host environment or an external uncommitted `.env` file.
 
 The service listens on port `8787` and stores SQLite data in a persistent Docker volume.
+
+Typical install when Docker already exists:
+
+```text
+git clone
+→ configure TASKS_OPS_TOKEN outside Git
+→ docker compose up -d --build
+→ verify
+```
+
+## Native Node
+
+Supported CI runtimes: Node.js 22 and 24.
+
+Typical native install:
+
+```text
+git clone
+→ npm install
+→ npm run build
+→ node dist/server.js
+```
+
+Native Windows installs must also account for restart-after-reboot before being considered persistence-complete. If `npm install` unexpectedly falls back to native C++ compilation, stop and review the runtime/dependency path before installing a compiler toolchain.
 
 Public endpoints:
 
