@@ -40,48 +40,11 @@ export class TaskService {
   constructor(private readonly repository: TaskRepository) {}
 
   create(input: CreateTaskInput): Task {
-    const now = new Date().toISOString();
-    const task: Task = {
-      id: input.id ?? `tsk_${randomUUID()}`,
-      title: input.title.trim(),
-      body: input.body,
-      status: input.status ?? 'todo',
-      priority: input.priority,
-      dueDate: input.dueDate,
-      tags: normalizeTags(input.tags ?? []),
-      assignedTo: input.assignedTo,
-      waitingOn: input.waitingOn,
-      waitingSince: input.status === 'waiting' ? (input.waitingSince ?? now) : input.waitingSince,
-      parentTaskId: input.parentTaskId,
-      parentTaskTitle: input.parentTaskTitle,
-      relationType: input.relationType,
-      context: input.context ?? {},
-      createdAt: now,
-      updatedAt: now,
-      completedAt: input.status === 'done' ? now : undefined,
-      revision: 1,
-    };
+    return this.createInternal(input, false);
+  }
 
-    this.repository.create(task);
-    this.recordActivity({
-      taskId: task.id,
-      type: 'created',
-      actor: input.actor,
-      timestamp: now,
-      toStatus: task.status,
-    });
-
-    if (task.relationType === 'follow_up') {
-      this.recordActivity({
-        taskId: task.id,
-        type: 'follow_up_created',
-        actor: input.actor,
-        timestamp: now,
-        message: task.parentTaskId ? `Follow-up for ${task.parentTaskId}` : undefined,
-      });
-    }
-
-    return task;
+  recoverFromMarkdown(input: CreateTaskInput): Task {
+    return this.createInternal(input, true);
   }
 
   get(id: string): Task {
@@ -176,6 +139,61 @@ export class TaskService {
       blocked: active.filter((task) => task.status === 'blocked'),
       urgent: active.filter((task) => task.priority === 'urgent'),
     };
+  }
+
+  private createInternal(input: CreateTaskInput, recoveredFromMarkdown: boolean): Task {
+    const now = new Date().toISOString();
+    const task: Task = {
+      id: input.id ?? `tsk_${randomUUID()}`,
+      title: input.title.trim(),
+      body: input.body,
+      status: input.status ?? 'todo',
+      priority: input.priority,
+      dueDate: input.dueDate,
+      tags: normalizeTags(input.tags ?? []),
+      assignedTo: input.assignedTo,
+      waitingOn: input.waitingOn,
+      waitingSince: input.status === 'waiting' ? (input.waitingSince ?? now) : input.waitingSince,
+      parentTaskId: input.parentTaskId,
+      parentTaskTitle: input.parentTaskTitle,
+      relationType: input.relationType,
+      context: input.context ?? {},
+      createdAt: now,
+      updatedAt: now,
+      completedAt: input.status === 'done' ? now : undefined,
+      revision: 1,
+    };
+
+    this.repository.create(task);
+    this.recordActivity({
+      taskId: task.id,
+      type: 'created',
+      actor: input.actor,
+      timestamp: now,
+      toStatus: task.status,
+    });
+
+    if (recoveredFromMarkdown) {
+      this.recordActivity({
+        taskId: task.id,
+        type: 'recovered_from_markdown',
+        actor: input.actor,
+        timestamp: now,
+        message: 'Structured task reconstructed from Markdown marker and context.',
+      });
+    }
+
+    if (task.relationType === 'follow_up') {
+      this.recordActivity({
+        taskId: task.id,
+        type: 'follow_up_created',
+        actor: input.actor,
+        timestamp: now,
+        message: task.parentTaskId ? `Follow-up for ${task.parentTaskId}` : undefined,
+      });
+    }
+
+    return task;
   }
 
   private recordActivity(activity: Omit<TaskActivity, 'id'>): void {
