@@ -59,6 +59,7 @@ const listQuerySchema = z.object({
   containerId: z.string().optional(),
   waitingOn: z.string().optional(),
   parentTaskId: z.string().optional(),
+  q: z.string().min(1).optional(),
 });
 
 const attentionQuerySchema = z.object({
