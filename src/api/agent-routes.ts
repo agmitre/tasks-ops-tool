@@ -35,13 +35,10 @@ const attentionSummaryQuerySchema = z.object({
 export function registerAgentRoutes(app: FastifyInstance, ops: AgentOpsService): void {
   app.post('/ops/tasks/:id/wait', async (request, reply) => {
     const params = taskParamSchema.safeParse(request.params);
+    if (!params.success) return validationError(reply, params.error);
+
     const body = waitSchema.safeParse(request.body);
-    if (!params.success || !body.success) {
-      return reply.code(400).send({
-        error: 'validation_error',
-        details: params.success ? body.error.flatten() : params.error.flatten(),
-      });
-    }
+    if (!body.success) return validationError(reply, body.error);
 
     try {
       return reply.send(ops.wait({ taskId: params.data.id, ...body.data }));
@@ -52,13 +49,10 @@ export function registerAgentRoutes(app: FastifyInstance, ops: AgentOpsService):
 
   app.post('/ops/tasks/:id/complete', async (request, reply) => {
     const params = taskParamSchema.safeParse(request.params);
+    if (!params.success) return validationError(reply, params.error);
+
     const body = completeSchema.safeParse(request.body ?? {});
-    if (!params.success || !body.success) {
-      return reply.code(400).send({
-        error: 'validation_error',
-        details: params.success ? body.error.flatten() : params.error.flatten(),
-      });
-    }
+    if (!body.success) return validationError(reply, body.error);
 
     try {
       return reply.send(ops.complete({ taskId: params.data.id, ...body.data }));
@@ -69,13 +63,10 @@ export function registerAgentRoutes(app: FastifyInstance, ops: AgentOpsService):
 
   app.post('/ops/tasks/:id/follow-up', async (request, reply) => {
     const params = taskParamSchema.safeParse(request.params);
+    if (!params.success) return validationError(reply, params.error);
+
     const body = followUpSchema.safeParse(request.body ?? {});
-    if (!params.success || !body.success) {
-      return reply.code(400).send({
-        error: 'validation_error',
-        details: params.success ? body.error.flatten() : params.error.flatten(),
-      });
-    }
+    if (!body.success) return validationError(reply, body.error);
 
     try {
       return reply.code(201).send(ops.followUp({ taskId: params.data.id, ...body.data }));
@@ -86,14 +77,16 @@ export function registerAgentRoutes(app: FastifyInstance, ops: AgentOpsService):
 
   app.get('/ops/attention', async (request, reply) => {
     const query = attentionSummaryQuerySchema.safeParse(request.query);
-    if (!query.success) {
-      return reply.code(400).send({
-        error: 'validation_error',
-        details: query.error.flatten(),
-      });
-    }
+    if (!query.success) return validationError(reply, query.error);
 
     return reply.send(ops.attentionSummary(query.data));
+  });
+}
+
+function validationError(reply: any, error: z.ZodError) {
+  return reply.code(400).send({
+    error: 'validation_error',
+    details: error.flatten(),
   });
 }
 
