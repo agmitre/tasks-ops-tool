@@ -108,6 +108,18 @@ export class TaskRepository {
       params.tag = filters.tag.replace(/^#/, '').toLowerCase();
     }
 
+    if (filters.q?.trim()) {
+      clauses.push(`(
+        lower(title) LIKE @q OR
+        lower(coalesce(body, '')) LIKE @q OR
+        lower(coalesce(parent_task_title, '')) LIKE @q OR
+        lower(coalesce(workspace_name, '')) LIKE @q OR
+        lower(coalesce(container_name, '')) LIKE @q OR
+        lower(coalesce(source_note_title, '')) LIKE @q
+      )`);
+      params.q = `%${filters.q.trim().toLowerCase()}%`;
+    }
+
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     const rows = this.db.prepare(`
       SELECT * FROM tasks
