@@ -87,6 +87,7 @@ export class TaskRepository {
     eq('priority', 'priority', filters.priority);
     eq('assigned_to', 'assignedTo', filters.assignedTo);
     eq('container_id', 'containerId', filters.containerId);
+    eq('source_note_id', 'sourceNoteId', filters.sourceNoteId);
     eq('waiting_on', 'waitingOn', filters.waitingOn);
     eq('parent_task_id', 'parentTaskId', filters.parentTaskId);
 
