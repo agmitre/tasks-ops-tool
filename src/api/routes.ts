@@ -58,6 +58,7 @@ const listQuerySchema = z.object({
   assignedTo: z.string().optional(),
   tag: z.string().optional(),
   containerId: z.string().optional(),
+  sourceNoteId: z.string().optional(),
   waitingOn: z.string().optional(),
   parentTaskId: z.string().optional(),
   q: z.string().min(1).optional(),
