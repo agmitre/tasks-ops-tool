@@ -76,6 +76,7 @@ export interface TaskListFilters {
   assignedTo?: string;
   tag?: string;
   containerId?: string;
+  sourceNoteId?: string;
   waitingOn?: string;
   parentTaskId?: string;
   q?: string;
