@@ -120,6 +120,31 @@ describe('TaskService', () => {
     expect(attention.urgent.map((task) => task.title)).toContain('Overdue urgent task');
   });
 
+  it('filters tasks by source note id', () => {
+    const service = createService();
+    service.create({
+      title: 'First task from note A',
+      context: { sourceNoteId: 'note_a' },
+    });
+    service.create({
+      title: 'Second task from note A',
+      context: { sourceNoteId: 'note_a' },
+    });
+    service.create({
+      title: 'Task from note B',
+      context: { sourceNoteId: 'note_b' },
+    });
+
+    expect(service.list({ sourceNoteId: 'note_a' }).map((task) => task.title)).toEqual([
+      'Second task from note A',
+      'First task from note A',
+    ]);
+    expect(service.list({ sourceNoteId: 'note_b' }).map((task) => task.title)).toEqual([
+      'Task from note B',
+    ]);
+    expect(service.list({ sourceNoteId: 'missing_note' })).toEqual([]);
+  });
+
   it('hydrates naked Markdown tasks and preserves stable IDs', () => {
     const service = createService();
     const result = ingestMarkdownTasks(service, {
