@@ -89,10 +89,73 @@ Implemented:
 - agent intent endpoints for wait, complete, and follow-up
 - compact agent heartbeat attention summary
 - bearer-token authentication
+- stdio MCP agent interface
 - Docker/Compose deployment with persistent SQLite storage
 - CI for typecheck, tests, and container build
 
 No UI, Gantt, complex recurrence, or webhook system is required for this alpha.
+
+## MCP agent interface
+
+The MCP adapter is intentionally thin. It does not access SQLite and does not reimplement task rules. It calls the existing Tasks Ops HTTP API through the reusable client in `src/client/tasks-ops-client.ts`, so the task engine remains the single source of truth.
+
+The first MCP surface is deliberately small:
+
+```text
+list_tasks
+get_task
+create_task
+update_task
+delete_task
+get_task_activity
+complete_task
+wait_task
+create_follow_up
+get_attention
+get_attention_details
+ingest_markdown_tasks
+```
+
+Common agent actions such as completing, waiting, and creating follow-ups use the existing `/ops` intent endpoints, so callers do not need to perform revision read/update loops for normal operations.
+
+### Run locally over stdio
+
+The Tasks Ops HTTP service must already be running. Then configure the same bearer token for the MCP process and start:
+
+```bash
+npm run start:mcp
+```
+
+For development:
+
+```bash
+npm run dev:mcp
+```
+
+Environment:
+
+```text
+TASKS_OPS_URL=http://127.0.0.1:8787
+TASKS_OPS_TOKEN=<operator-managed-secret>
+```
+
+`TASKS_OPS_URL` defaults to `http://127.0.0.1:8787` when omitted.
+
+The intended local architecture is:
+
+```text
+agent
+  │ MCP stdio
+  ▼
+Tasks Ops MCP adapter
+  │ HTTP + bearer token
+  ▼
+Tasks Ops service
+  ▼
+SQLite
+```
+
+Agents should use MCP for supported task operations instead of shell commands, direct REST calls, temporary scripts, or direct database access. If a required operation is missing from MCP, report the missing capability rather than creating a bypass.
 
 ## Agent installation
 
