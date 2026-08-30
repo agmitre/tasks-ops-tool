@@ -5,6 +5,7 @@ import { TASK_PRIORITIES, TASK_RELATION_TYPES, TASK_STATUSES } from '../../domai
 import { withTaskOpsTool } from './define-task-ops-tool.js';
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const isoTimestamp = z.string().datetime({ offset: true });
 const contextSchema = z.object({
   workspaceId: z.string().min(1).optional(),
   workspaceName: z.string().min(1).optional(),
@@ -40,20 +41,25 @@ const listSchema = z.object({
   priority: z.enum(TASK_PRIORITIES).optional(),
   dueBefore: dateOnly.optional(),
   dueAfter: dateOnly.optional(),
+  createdAfter: isoTimestamp.optional(),
+  updatedAfter: isoTimestamp.optional(),
   assignedTo: z.string().optional(),
   tag: z.string().optional(),
+  workspaceId: z.string().optional(),
   containerId: z.string().optional(),
+  sourceNoteId: z.string().optional(),
   waitingOn: z.string().optional(),
   parentTaskId: z.string().optional(),
   q: z.string().min(1).optional(),
 });
 
 const idSchema = z.object({ taskId: z.string().min(1) });
+const idsSchema = z.object({ taskIds: z.array(z.string().min(1)).min(1).max(100) });
 
 export function registerTaskTools(server: McpServer, client: TaskOpsClient): void {
   server.registerTool('list_tasks', {
     title: 'List Tasks Ops tasks',
-    description: 'List tasks using structured filters or lightweight text search. Prefer structured filters before q.',
+    description: 'List tasks using structured filters, Taskel context IDs, recency filters, or lightweight text search. Prefer structured filters before q.',
     inputSchema: listSchema,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   }, withTaskOpsTool('list_tasks', (args) => client.tasks.list(args)));
@@ -65,9 +71,16 @@ export function registerTaskTools(server: McpServer, client: TaskOpsClient): voi
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   }, withTaskOpsTool('get_task', ({ taskId }) => client.tasks.get(taskId)));
 
+  server.registerTool('get_tasks', {
+    title: 'Get multiple Tasks Ops tasks',
+    description: 'Get up to 100 canonical tasks in one call. Returns found tasks plus missing task IDs.',
+    inputSchema: idsSchema,
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, withTaskOpsTool('get_tasks', ({ taskIds }) => client.tasks.getMany(taskIds)));
+
   server.registerTool('create_task', {
     title: 'Create Tasks Ops task',
-    description: 'Create a durable operational task. Use context fields for stable source references when available.',
+    description: 'Create a durable operational task. If assignedTo is omitted and actor is supplied, the task defaults to that actor.',
     inputSchema: createSchema,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   }, withTaskOpsTool('create_task', (args) => client.tasks.create(args)));
