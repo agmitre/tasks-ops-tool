@@ -87,5 +87,16 @@ describe('AgentOpsService', () => {
     expect(summary.counts.urgent).toBe(1);
     expect(summary.counts.blocked).toBe(1);
     expect(summary.taskIds.overdue).toHaveLength(1);
+    expect(summary.details).toBeUndefined();
+  });
+
+  it('can include full attention task details in the same response', () => {
+    const { tasks, ops } = createOps();
+    const urgent = tasks.create({ title: 'Urgent detail', priority: 'urgent' });
+
+    const summary = ops.attentionSummary({ includeDetails: true });
+
+    expect(summary.details?.urgent.map((task) => task.id)).toContain(urgent.id);
+    expect(summary.counts.urgent).toBe(1);
   });
 });
