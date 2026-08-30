@@ -38,7 +38,7 @@ export function createTaskOpsClient(config: TaskOpsClientConfig) {
     return body as T;
   }
 
-  const query = (params: Record<string, string | number | undefined>) => {
+  const query = (params: Record<string, string | number | boolean | undefined>) => {
     const search = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) search.set(key, String(value));
@@ -51,6 +51,7 @@ export function createTaskOpsClient(config: TaskOpsClientConfig) {
     tasks: {
       list: (filters: Record<string, string | undefined> = {}) => request(`/tasks${query(filters)}`),
       get: (id: string) => request(`/tasks/${encodeURIComponent(id)}`),
+      getMany: (ids: string[]) => request('/tasks/batch/get', { method: 'POST', body: JSON.stringify({ ids }) }),
       create: (input: unknown) => request('/tasks', { method: 'POST', body: JSON.stringify(input) }),
       update: (id: string, input: unknown) => request(`/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) }),
       remove: (id: string) => request(`/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' }),
@@ -58,7 +59,7 @@ export function createTaskOpsClient(config: TaskOpsClientConfig) {
     },
     attention: {
       full: (options: { dueSoonDays?: number; waitingDays?: number } = {}) => request(`/attention${query(options)}`),
-      summary: (options: { dueSoonDays?: number; waitingDays?: number } = {}) => request(`/ops/attention${query(options)}`),
+      summary: (options: { dueSoonDays?: number; waitingDays?: number; includeDetails?: boolean } = {}) => request(`/ops/attention${query(options)}`),
     },
     ops: {
       wait: (id: string, input: unknown) => request(`/ops/tasks/${encodeURIComponent(id)}/wait`, { method: 'POST', body: JSON.stringify(input) }),
