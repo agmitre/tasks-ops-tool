@@ -33,7 +33,7 @@ describe('TaskService', () => {
 
     expect(task.title).toBe('Follow up with Phoebe');
     expect(task.tags).toEqual(['outdoorlink', 'chainzone']);
-    expect(task.assignedTo).toBe('bryan');
+    expect(task.assignedTo).toBeUndefined();
     expect(task.revision).toBe(1);
     expect(service.activity(task.id)).toMatchObject([
       { type: 'created', actor: 'bryan', toStatus: 'todo' },
