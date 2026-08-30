@@ -53,6 +53,16 @@ export class TaskService {
     return task;
   }
 
+  getMany(ids: string[]): { items: Task[]; missingIds: string[] } {
+    const uniqueIds = [...new Set(ids)];
+    const items = this.repository.getByIds(uniqueIds);
+    const found = new Set(items.map((task) => task.id));
+    return {
+      items,
+      missingIds: uniqueIds.filter((id) => !found.has(id)),
+    };
+  }
+
   list(filters: TaskListFilters = {}): Task[] {
     return this.repository.list(filters);
   }

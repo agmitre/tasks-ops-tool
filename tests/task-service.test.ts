@@ -33,10 +33,22 @@ describe('TaskService', () => {
 
     expect(task.title).toBe('Follow up with Phoebe');
     expect(task.tags).toEqual(['outdoorlink', 'chainzone']);
+    expect(task.assignedTo).toBeUndefined();
     expect(task.revision).toBe(1);
     expect(service.activity(task.id)).toMatchObject([
       { type: 'created', actor: 'bryan', toStatus: 'todo' },
     ]);
+  });
+
+  it('preserves an explicit assignee instead of replacing it with the actor', () => {
+    const service = createService();
+    const task = service.create({
+      title: 'Send specs',
+      assignedTo: 'allan',
+      actor: 'bryan',
+    });
+
+    expect(task.assignedTo).toBe('allan');
   });
 
   it('moves tasks into waiting and records when the wait began', () => {
@@ -86,27 +98,35 @@ describe('TaskService', () => {
     ]);
   });
 
-  it('filters by tags, text, and computes attention buckets', () => {
+  it('filters by tags, context IDs, recency, text, and computes attention buckets', () => {
     const service = createService();
-    service.create({
+    const first = service.create({
       title: 'Overdue urgent task',
       body: 'Chainzone controller review',
       dueDate: '2026-08-10',
       priority: 'urgent',
       tags: ['outdoorlink'],
+      context: { workspaceId: 'ws_odl', containerId: 'cnt_integrations', sourceNoteId: 'note_chainzone' },
     });
     service.create({
       title: 'Blocked task',
       status: 'blocked',
       tags: ['taskel'],
+      context: { workspaceId: 'ws_dev', containerId: 'cnt_taskel', sourceNoteId: 'note_taskel' },
     });
     service.create({
       title: 'Due soon',
       dueDate: '2026-08-18',
       tags: ['outdoorlink'],
+      context: { workspaceId: 'ws_odl', containerId: 'cnt_integrations', sourceNoteId: 'note_other' },
     });
 
     expect(service.list({ tag: '#OutdoorLink' })).toHaveLength(2);
+    expect(service.list({ workspaceId: 'ws_odl' })).toHaveLength(2);
+    expect(service.list({ containerId: 'cnt_integrations' })).toHaveLength(2);
+    expect(service.list({ sourceNoteId: 'note_chainzone' }).map((task) => task.id)).toEqual([first.id]);
+    expect(service.list({ createdAfter: '2000-01-01T00:00:00.000Z' })).toHaveLength(3);
+    expect(service.list({ updatedAfter: '2000-01-01T00:00:00.000Z' })).toHaveLength(3);
     expect(service.list({ q: 'controller' }).map((task) => task.title)).toEqual(['Overdue urgent task']);
 
     const attention = service.attention({
@@ -118,6 +138,17 @@ describe('TaskService', () => {
     expect(attention.dueSoon.map((task) => task.title)).toContain('Due soon');
     expect(attention.blocked.map((task) => task.title)).toContain('Blocked task');
     expect(attention.urgent.map((task) => task.title)).toContain('Overdue urgent task');
+  });
+
+  it('gets multiple tasks in requested order and reports missing IDs', () => {
+    const service = createService();
+    const first = service.create({ title: 'First' });
+    const second = service.create({ title: 'Second' });
+
+    const result = service.getMany([second.id, 'tsk_missing', first.id, second.id]);
+
+    expect(result.items.map((task) => task.id)).toEqual([second.id, first.id]);
+    expect(result.missingIds).toEqual(['tsk_missing']);
   });
 
   it('hydrates naked Markdown tasks and preserves stable IDs', () => {
