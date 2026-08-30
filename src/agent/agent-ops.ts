@@ -22,6 +22,13 @@ export interface AgentAttentionSummary {
     blocked: string[];
     urgent: string[];
   };
+  details?: {
+    overdue: Task[];
+    dueSoon: Task[];
+    waitingTooLong: Task[];
+    blocked: Task[];
+    urgent: Task[];
+  };
 }
 
 export class AgentOpsService {
@@ -83,10 +90,9 @@ export class AgentOpsService {
     return { intent: 'follow_up', task };
   }
 
-  attentionSummary(options: { dueSoonDays?: number; waitingDays?: number } = {}): AgentAttentionSummary {
+  attentionSummary(options: { dueSoonDays?: number; waitingDays?: number; includeDetails?: boolean } = {}): AgentAttentionSummary {
     const attention = this.tasks.attention(options);
-
-    return {
+    const summary: AgentAttentionSummary = {
       generatedAt: attention.generatedAt,
       counts: {
         overdue: attention.overdue.length,
@@ -103,5 +109,17 @@ export class AgentOpsService {
         urgent: attention.urgent.map((task) => task.id),
       },
     };
+
+    if (options.includeDetails) {
+      summary.details = {
+        overdue: attention.overdue,
+        dueSoon: attention.dueSoon,
+        waitingTooLong: attention.waitingTooLong,
+        blocked: attention.blocked,
+        urgent: attention.urgent,
+      };
+    }
+
+    return summary;
   }
 }
