@@ -55,12 +55,20 @@ const listQuerySchema = z.object({
   priority: z.enum(TASK_PRIORITIES).optional(),
   dueBefore: dateOnly.optional(),
   dueAfter: dateOnly.optional(),
+  createdAfter: isoTimestamp.optional(),
+  updatedAfter: isoTimestamp.optional(),
   assignedTo: z.string().optional(),
   tag: z.string().optional(),
+  workspaceId: z.string().optional(),
   containerId: z.string().optional(),
+  sourceNoteId: z.string().optional(),
   waitingOn: z.string().optional(),
   parentTaskId: z.string().optional(),
   q: z.string().min(1).optional(),
+});
+
+const batchGetSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(100),
 });
 
 const attentionQuerySchema = z.object({
@@ -90,6 +98,14 @@ export function registerTaskRoutes(app: FastifyInstance, service: TaskService): 
 
     const tasks = service.list(parsed.data as TaskListFilters);
     return reply.send({ items: tasks, count: tasks.length });
+  });
+
+  app.post('/tasks/batch/get', async (request, reply) => {
+    const parsed = batchGetSchema.safeParse(request.body);
+    if (!parsed.success) return validationError(reply, parsed.error);
+
+    const result = service.getMany(parsed.data.ids);
+    return reply.send({ ...result, count: result.items.length });
   });
 
   app.get('/tasks/:id', async (request, reply) => {
