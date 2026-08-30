@@ -73,6 +73,17 @@ export class TaskRepository {
     return row ? this.fromRow(row) : undefined;
   }
 
+  getByIds(ids: string[]): Task[] {
+    if (!ids.length) return [];
+    const placeholders = ids.map(() => '?').join(', ');
+    const rows = this.db.prepare(`SELECT * FROM tasks WHERE id IN (${placeholders})`).all(...ids) as TaskRow[];
+    const byId = new Map(rows.map((row) => [row.id, this.fromRow(row)]));
+    return ids.flatMap((id) => {
+      const task = byId.get(id);
+      return task ? [task] : [];
+    });
+  }
+
   list(filters: TaskListFilters = {}): Task[] {
     const clauses: string[] = [];
     const params: Record<string, unknown> = {};
@@ -86,7 +97,9 @@ export class TaskRepository {
     eq('status', 'status', filters.status);
     eq('priority', 'priority', filters.priority);
     eq('assigned_to', 'assignedTo', filters.assignedTo);
+    eq('workspace_id', 'workspaceId', filters.workspaceId);
     eq('container_id', 'containerId', filters.containerId);
+    eq('source_note_id', 'sourceNoteId', filters.sourceNoteId);
     eq('waiting_on', 'waitingOn', filters.waitingOn);
     eq('parent_task_id', 'parentTaskId', filters.parentTaskId);
 
@@ -98,6 +111,16 @@ export class TaskRepository {
     if (filters.dueAfter) {
       clauses.push('due_date IS NOT NULL AND due_date >= @dueAfter');
       params.dueAfter = filters.dueAfter;
+    }
+
+    if (filters.createdAfter) {
+      clauses.push('created_at >= @createdAfter');
+      params.createdAfter = filters.createdAfter;
+    }
+
+    if (filters.updatedAfter) {
+      clauses.push('updated_at >= @updatedAfter');
+      params.updatedAfter = filters.updatedAfter;
     }
 
     if (filters.tag) {
