@@ -83,7 +83,10 @@ export function registerTaskTools(server: McpServer, client: TaskOpsClient): voi
     description: 'Create a durable operational task. If assignedTo is omitted and actor is supplied, the task defaults to that actor.',
     inputSchema: createSchema,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
-  }, withTaskOpsTool('create_task', (args) => client.tasks.create(args)));
+  }, withTaskOpsTool('create_task', (args) => client.tasks.create({
+    ...args,
+    assignedTo: args.assignedTo ?? args.actor,
+  })));
 
   server.registerTool('update_task', {
     title: 'Update Tasks Ops task',
