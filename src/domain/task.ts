@@ -73,9 +73,13 @@ export interface TaskListFilters {
   priority?: TaskPriority;
   dueBefore?: string;
   dueAfter?: string;
+  createdAfter?: string;
+  updatedAfter?: string;
   assignedTo?: string;
   tag?: string;
+  workspaceId?: string;
   containerId?: string;
+  sourceNoteId?: string;
   waitingOn?: string;
   parentTaskId?: string;
   q?: string;
