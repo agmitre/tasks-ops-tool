@@ -30,6 +30,7 @@ const followUpSchema = z.object({
 const attentionSummaryQuerySchema = z.object({
   dueSoonDays: z.coerce.number().int().min(0).max(365).optional(),
   waitingDays: z.coerce.number().int().min(0).max(3650).optional(),
+  includeDetails: z.coerce.boolean().optional(),
 });
 
 export function registerAgentRoutes(app: FastifyInstance, ops: AgentOpsService): void {
