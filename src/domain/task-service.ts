@@ -161,7 +161,7 @@ export class TaskService {
       priority: input.priority,
       dueDate: input.dueDate,
       tags: normalizeTags(input.tags ?? []),
-      assignedTo: input.assignedTo ?? input.actor,
+      assignedTo: input.assignedTo,
       waitingOn: input.waitingOn,
       waitingSince: input.status === 'waiting' ? (input.waitingSince ?? now) : input.waitingSince,
       parentTaskId: input.parentTaskId,
